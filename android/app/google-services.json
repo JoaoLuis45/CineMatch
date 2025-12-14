@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "31289751950",
+    "project_id": "cinematch-46c3a",
+    "storage_bucket": "cinematch-46c3a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:31289751950:android:842fcb77fda20f601b8cdf",
+        "android_client_info": {
+          "package_name": "com.cinematch.cinematch"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "31289751950-omdrfu9aipsq6eerlcdml49qk9mofm2i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cinematch.cinematch",
+            "certificate_hash": "973512ea26bd07a8c0864198da58a631f00ee786"
+          }
+        },
+        {
+          "client_id": "31289751950-c3rklmb22uu03p6jbff5ueiq2big59dc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDxlrdHdNek_c0kiDwRy2Oy_KWmV-PiSPo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "31289751950-c3rklmb22uu03p6jbff5ueiq2big59dc.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "31289751950-grgkr3g93v4stp6710stvphifbo2k7a3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.cinematch.cinematch"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

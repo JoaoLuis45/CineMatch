@@ -1,0 +1,17 @@
+# Flutter Launcher Icons Configuration
+# Run: dart run flutter_launcher_icons
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/splash_icon.png"
+  min_sdk_android: 21
+  web:
+    generate: true
+    image_path: "assets/splash_icon.png"
+    background_color: "#0A0A0F"
+    theme_color: "#E50914"
+  windows:
+    generate: true
+    image_path: "assets/splash_icon.png"
+    icon_size: 48
