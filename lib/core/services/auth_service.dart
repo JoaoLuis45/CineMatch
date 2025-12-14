@@ -120,6 +120,11 @@ class AuthService {
     await _auth.currentUser?.updateDisplayName(name);
   }
 
+  /// Atualiza a foto do usuário
+  Future<void> updatePhotoUrl(String photoUrl) async {
+    await _auth.currentUser?.updatePhotoURL(photoUrl);
+  }
+
   /// Tratamento de erros do Firebase Auth
   String _handleAuthError(FirebaseAuthException e) {
     switch (e.code) {

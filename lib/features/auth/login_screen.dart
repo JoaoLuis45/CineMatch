@@ -282,7 +282,11 @@ class LoginScreen extends StatelessWidget {
                   if (_formKey.currentState!.validate()) {
                     final success = await controller.signIn();
                     if (success) {
-                      Get.offAllNamed('/home');
+                      if (await controller.shouldShowWelcome()) {
+                        Get.offAllNamed('/welcome');
+                      } else {
+                        Get.offAllNamed('/home');
+                      }
                     }
                   }
                 },
@@ -338,7 +342,11 @@ class LoginScreen extends StatelessWidget {
               : () async {
                   final success = await controller.signInWithGoogle();
                   if (success) {
-                    Get.offAllNamed('/home');
+                    if (await controller.shouldShowWelcome()) {
+                      Get.offAllNamed('/welcome');
+                    } else {
+                      Get.offAllNamed('/home');
+                    }
                   }
                 },
           style: OutlinedButton.styleFrom(

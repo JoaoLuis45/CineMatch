@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'core/controllers/auth_controller.dart';
 import 'core/controllers/movie_controller.dart';
@@ -12,10 +13,14 @@ import 'features/profile/profile_screen.dart';
 import 'features/result/movie_result_screen.dart';
 import 'features/shell/main_shell.dart';
 import 'features/splash/splash_screen.dart';
+import 'features/welcome/welcome_screen.dart';
 import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Carrega variáveis de ambiente
+  await dotenv.load(fileName: ".env");
 
   // Inicializa Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -91,6 +96,11 @@ class CineMatchApp extends StatelessWidget {
           name: '/profile',
           page: () => const ProfileScreen(),
           transition: Transition.rightToLeft,
+        ),
+        GetPage(
+          name: '/welcome',
+          page: () => const WelcomeScreen(),
+          transition: Transition.fadeIn,
         ),
       ],
 

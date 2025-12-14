@@ -281,7 +281,7 @@ class SignUpScreen extends StatelessWidget {
                   if (_formKey.currentState!.validate()) {
                     final success = await controller.signUp();
                     if (success) {
-                      Get.offAllNamed('/home');
+                      Get.offAllNamed('/welcome');
                     }
                   }
                 },

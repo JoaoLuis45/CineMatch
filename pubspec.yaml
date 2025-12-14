@@ -64,6 +64,9 @@ dependencies:
   # Native Splash
   flutter_native_splash: ^2.4.3
   url_launcher: ^6.3.2
+  intl: ^0.20.2
+  firebase_storage: ^12.4.10
+  flutter_dotenv: ^6.0.0
 
   # The following adds the Cupertino Icons font to your application.
 # For information on the generic Dart part of this file, see the
@@ -80,6 +83,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/
+    - .env
 dev_dependencies:
   flutter_launcher_icons: ^0.14.4
 

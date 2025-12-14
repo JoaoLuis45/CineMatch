@@ -23,6 +23,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   final _nameController = TextEditingController();
   DateTime? _birthDate;
+  String? _selectedGender; // Novo campo de gênero
   final Set<int> _selectedGenreIds = {};
   File? _imageFile;
   bool _isEditing = false;
@@ -47,13 +48,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
           if (profile['birthDate'] != null) {
             _birthDate = (profile['birthDate'] as dynamic).toDate();
           }
+          if (profile['gender'] != null) {
+            _selectedGender = profile['gender'];
+          }
+
+          // Se o nome do controller estiver vazio mas tiver no profile, atualiza
+          if (_nameController.text.isEmpty ||
+              _nameController.text == 'Cinéfilo') {
+            if (profile['displayName'] != null) {
+              _nameController.text = profile['displayName'];
+            }
+          }
+
           _isLoading = false;
         });
       } else {
         setState(() => _isLoading = false);
       }
     } catch (e) {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -215,7 +228,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _buildInfoRow(
             icon: Icons.person_outline_rounded,
             label: 'Nome',
-            value: _authController.userName,
+            value: _authController.userName, // Fallback visual
             isEditable: _isEditing,
             controller: _nameController,
           ),
@@ -228,6 +241,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             value: _authController.userEmail,
             isEditable: false,
           ),
+          const Divider(color: AppColors.surfaceLight, height: 24),
+
+          // Gênero
+          _buildGenderRow(),
           const Divider(color: AppColors.surfaceLight, height: 24),
 
           // Data de nascimento
@@ -271,14 +288,88 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     )
                   : Text(
-                      value.isEmpty ? 'Não informado' : value,
+                      (isEditable &&
+                              controller != null &&
+                              controller.text.isNotEmpty)
+                          ? controller.text
+                          : (value.isEmpty ? 'Não informado' : value),
                       style: TextStyle(
                         fontSize: 16,
-                        color: value.isEmpty
+                        color:
+                            (value.isEmpty &&
+                                (controller?.text.isEmpty ?? true))
                             ? AppColors.textMuted
                             : AppColors.textPrimary,
                       ),
                     ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGenderRow() {
+    return Row(
+      children: [
+        Icon(
+          _selectedGender == 'Feminino'
+              ? Icons.female
+              : _selectedGender == 'Masculino'
+              ? Icons.male
+              : Icons.people_outline_rounded,
+          color: AppColors.textMuted,
+          size: 22,
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Gênero',
+                style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+              ),
+              const SizedBox(height: 4),
+              if (_isEditing)
+                DropdownButtonFormField<String>(
+                  value: _selectedGender,
+                  items: ['Feminino', 'Masculino'].map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: (newValue) {
+                    setState(() {
+                      _selectedGender = newValue;
+                    });
+                  },
+                  decoration: const InputDecoration(
+                    isDense: true,
+                    contentPadding: EdgeInsets.zero,
+                    border: InputBorder.none,
+                  ),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: AppColors.textPrimary,
+                  ),
+                  dropdownColor: AppColors.surface,
+                  icon: const Icon(
+                    Icons.arrow_drop_down,
+                    color: AppColors.primary,
+                  ),
+                )
+              else
+                Text(
+                  _selectedGender ?? 'Conte-nos (Opcional)',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: _selectedGender == null
+                        ? AppColors.textMuted
+                        : AppColors.textPrimary,
+                  ),
+                ),
             ],
           ),
         ),
@@ -534,6 +625,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _saveProfile() async {
     try {
+      if (_isLoading) return;
+
+      setState(() => _isLoading = true);
+
+      // Upload da imagem se houver
+      String? photoUrl;
+      if (_imageFile != null) {
+        photoUrl = await _userService.uploadProfileImage(_imageFile!);
+        if (photoUrl != null) {
+          await _authController.updatePhotoUrl(photoUrl);
+        }
+      }
+
       // Obtém os nomes dos gêneros selecionados
       final selectedGenreNames = _movieController.genres
           .where((g) => _selectedGenreIds.contains(g.id))
@@ -543,10 +647,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
       // Salva no Firestore
       await _userService.saveUserProfile(
         displayName: _nameController.text,
+        gender: _selectedGender,
         birthDate: _birthDate,
+        photoUrl: photoUrl,
         favoriteGenres: selectedGenreNames,
         favoriteGenreIds: _selectedGenreIds.toList(),
       );
+
+      // Atualiza o nome no AuthController se houver mudança
+      if (_nameController.text.isNotEmpty) {
+        await _authController.updateDisplayName(_nameController.text);
+      }
+
+      // Recarrega dados localmente
+      await _loadUserProfile();
 
       Get.snackbar(
         'Sucesso',
@@ -567,6 +681,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         margin: const EdgeInsets.all(16),
         borderRadius: 12,
       );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 

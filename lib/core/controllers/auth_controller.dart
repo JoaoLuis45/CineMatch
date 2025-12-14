@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../services/auth_service.dart';
+import '../services/user_service.dart';
 import 'movie_controller.dart';
 
 /// Controller de autenticação GetX
@@ -123,6 +124,8 @@ class AuthController extends GetxController {
     return null;
   }
 
+  final UserService _userService = UserService();
+
   /// Login com email e senha
   Future<bool> signIn() async {
     try {
@@ -133,6 +136,9 @@ class AuthController extends GetxController {
         email: emailController.text,
         password: passwordController.text,
       );
+
+      // Garante que o usuário existe no Firestore
+      await _userService.initializeUser();
 
       clearControllers();
       return true;
@@ -155,6 +161,10 @@ class AuthController extends GetxController {
         password: passwordController.text,
         displayName: nameController.text,
       );
+
+      // Salva dados iniciais explicitamente
+      await _userService.saveUserProfile(displayName: nameController.text);
+      await _userService.initializeUser();
 
       clearControllers();
       return true;
@@ -179,6 +189,9 @@ class AuthController extends GetxController {
         return false;
       }
 
+      // Garante que o usuário existe no Firestore
+      await _userService.initializeUser();
+
       clearControllers();
       return true;
     } catch (e) {
@@ -187,6 +200,12 @@ class AuthController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  /// Verifica se deve mostrar o welcome
+  Future<bool> shouldShowWelcome() async {
+    final completed = await _userService.isWelcomeCompleted();
+    return !completed;
   }
 
   /// Logout
@@ -222,5 +241,19 @@ class AuthController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  /// Atualiza o nome do usuário
+  Future<void> updateDisplayName(String name) async {
+    await _authService.updateDisplayName(name);
+    // Força atualização do estado do usuário
+    user.value = _authService.currentUser;
+  }
+
+  /// Atualiza a foto do usuário
+  Future<void> updatePhotoUrl(String photoUrl) async {
+    await _authService.updatePhotoUrl(photoUrl);
+    // Força atualização do estado do usuário
+    user.value = _authService.currentUser;
   }
 }

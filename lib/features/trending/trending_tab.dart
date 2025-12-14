@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../core/constants/api_constants.dart';
+import '../../core/controllers/auth_controller.dart';
 import '../../core/controllers/movie_controller.dart';
 import '../../core/models/movie.dart';
 import '../../core/services/movie_service.dart';
@@ -133,27 +134,31 @@ class _TrendingTabState extends State<TrendingTab> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      'Top Filmes',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+                child: Obx(() {
+                  final userName = Get.find<AuthController>().userName;
+                  final firstName = userName.split(' ').first;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Olá, $firstName',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'Os melhores avaliados',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textMuted,
+                      Text(
+                        'Vamos assistir algo hoje?',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textMuted,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  );
+                }),
               ),
               // Botão de perfil
               GestureDetector(

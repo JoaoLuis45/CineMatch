@@ -197,15 +197,12 @@ class MovieService {
 
       if (results == null) return null;
 
-      // Busca provedores do Brasil, se não houver, tenta US
+      // Busca provedores do Brasil
       final brProviders = results['BR'] as Map<String, dynamic>?;
-      final usProviders = results['US'] as Map<String, dynamic>?;
 
-      final providersData = brProviders ?? usProviders;
+      if (brProviders == null) return null;
 
-      if (providersData == null) return null;
-
-      return WatchProviders.fromJson(providersData);
+      return WatchProviders.fromJson(brProviders);
     } catch (e) {
       return null;
     }

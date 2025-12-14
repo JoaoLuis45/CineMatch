@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import '../models/movie.dart';
 
 /// Serviço para gerenciar dados do usuário no Firestore
@@ -20,6 +22,7 @@ class UserService {
   Future<void> saveUserProfile({
     String? displayName,
     String? photoUrl,
+    String? gender,
     DateTime? birthDate,
     List<String>? favoriteGenres,
     List<int>? favoriteGenreIds,
@@ -33,11 +36,30 @@ class UserService {
 
     if (displayName != null) data['displayName'] = displayName;
     if (photoUrl != null) data['photoUrl'] = photoUrl;
+    if (gender != null) data['gender'] = gender;
     if (birthDate != null) data['birthDate'] = Timestamp.fromDate(birthDate);
     if (favoriteGenres != null) data['favoriteGenres'] = favoriteGenres;
     if (favoriteGenreIds != null) data['favoriteGenreIds'] = favoriteGenreIds;
 
     await doc.set(data, SetOptions(merge: true));
+  }
+
+  /// Marca o tutorial de boas-vindas como completo
+  Future<void> completeWelcome() async {
+    final doc = _userDoc;
+    if (doc == null) return;
+
+    await doc.set({
+      'welcomeCompleted': true,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  /// Verifica se o tutorial de boas-vindas foi completado
+  Future<bool> isWelcomeCompleted() async {
+    final profile = await loadUserProfile();
+    if (profile == null) return false;
+    return profile['welcomeCompleted'] ?? false;
   }
 
   /// Carrega os dados do perfil do usuário
@@ -217,6 +239,25 @@ class UserService {
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
+    }
+  }
+
+  /// Upload da foto de perfil para o Firebase Storage
+  Future<String?> uploadProfileImage(File imageFile) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return null;
+
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child('profile_photos')
+          .child('${user.uid}.jpg');
+
+      await ref.putFile(imageFile);
+      return await ref.getDownloadURL();
+    } catch (e) {
+      print('Erro ao fazer upload da imagem: $e');
+      throw 'Falha ao fazer upload da imagem: $e';
     }
   }
 }

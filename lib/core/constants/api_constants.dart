@@ -1,3 +1,5 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 /// Constantes da API TMDB
 class ApiConstants {
   ApiConstants._();
@@ -8,8 +10,8 @@ class ApiConstants {
   /// Base URL para imagens
   static const String imageBaseUrl = 'https://image.tmdb.org/t/p';
 
-  /// API Key - Substitua pela sua chave obtida em https://www.themoviedb.org/settings/api
-  static const String apiKey = '065fcbe5de8fc43cb5b49da232d1fa31';
+  /// API Key - Obtida do arquivo .env
+  static String get apiKey => dotenv.env['TMDB_API_KEY'] ?? '';
 
   /// Idioma padrão
   static const String language = 'pt-BR';

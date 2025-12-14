@@ -1,0 +1,20 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Regra correta: Match no arquivo inteiro (ex: "uid.jpg")
+    match /profile_photos/{fileName} {
+      // Leitura livre para logados
+      allow read: if request.auth != null;
+      
+      // Escrita apenas se o nome do arquivo for "UID.jpg"
+      // Isso garante que ninguém sobrescreva a foto de outro
+      allow write: if request.auth != null && fileName == request.auth.uid + '.jpg';
+    }
+
+    // Bloqueio padrão
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
