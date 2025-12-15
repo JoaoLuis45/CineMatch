@@ -266,8 +266,8 @@ class _TrendingTabState extends State<TrendingTab> {
   Widget _buildMovieCard(Movie movie) {
     return GestureDetector(
       onTap: () {
-        // Definir o filme recomendado e ir para a tela de resultado
         _movieController.recommendedMovie.value = movie;
+        _movieController.fetchWatchProviders(movie.id);
         Get.toNamed('/result');
       },
       child: Container(

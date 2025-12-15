@@ -7,20 +7,12 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:31289751950:android:842fcb77fda20f601b8cdf",
+        "mobilesdk_app_id": "1:31289751950:android:3b86f4713b7471521b8cdf",
         "android_client_info": {
-          "package_name": "com.cinematch.cinematch"
+          "package_name": "com.reiffer.cinematch"
         }
       },
       "oauth_client": [
-        {
-          "client_id": "31289751950-omdrfu9aipsq6eerlcdml49qk9mofm2i.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.cinematch.cinematch",
-            "certificate_hash": "973512ea26bd07a8c0864198da58a631f00ee786"
-          }
-        },
         {
           "client_id": "31289751950-c3rklmb22uu03p6jbff5ueiq2big59dc.apps.googleusercontent.com",
           "client_type": 3

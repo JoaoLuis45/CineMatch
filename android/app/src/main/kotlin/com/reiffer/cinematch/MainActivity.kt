@@ -1,4 +1,4 @@
-package com.cinematch.cinematch
+package com.reiffer.cinematch
 
 import io.flutter.embedding.android.FlutterActivity
 

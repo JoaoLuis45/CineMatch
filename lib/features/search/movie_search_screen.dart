@@ -150,6 +150,7 @@ class _MovieSearchScreenState extends State<MovieSearchScreen> {
               onTap: () {
                 _controller.recommendedMovie.value = movie;
                 _controller.movieHistory.add(movie);
+                _controller.fetchWatchProviders(movie.id);
                 Get.toNamed('/result');
               },
               child: Container(

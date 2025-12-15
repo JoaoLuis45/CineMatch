@@ -63,6 +63,6 @@ class DefaultFirebaseOptions {
     messagingSenderId: '31289751950',
     projectId: 'cinematch-46c3a',
     storageBucket: 'cinematch-46c3a.firebasestorage.app',
-    iosBundleId: 'com.cinematch.cinematch',
+    iosBundleId: 'com.reiffer.cinematch',
   );
 }

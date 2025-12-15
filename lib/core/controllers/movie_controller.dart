@@ -111,7 +111,7 @@ class MovieController extends GetxController {
         // Adiciona ao histórico
         _addToHistory(movie);
         // Busca provedores de streaming
-        _fetchWatchProviders(movie.id);
+        fetchWatchProviders(movie.id);
       } else {
         errorMessage.value = 'Nenhum filme encontrado com esses critérios';
       }
@@ -145,7 +145,7 @@ class MovieController extends GetxController {
   }
 
   /// Busca provedores de streaming para um filme
-  Future<void> _fetchWatchProviders(int movieId) async {
+  Future<void> fetchWatchProviders(int movieId) async {
     try {
       isLoadingProviders.value = true;
       final providers = await _movieService.getWatchProviders(movieId);
