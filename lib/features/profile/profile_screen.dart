@@ -113,18 +113,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
           onPressed: () => Get.back(),
         ),
         actions: [
-          IconButton(
-            icon: Icon(
-              _isEditing ? Icons.check_rounded : Icons.edit_rounded,
-              color: _isEditing ? Colors.green : AppColors.textPrimary,
+          if (!_authController.isGuest)
+            IconButton(
+              icon: Icon(
+                _isEditing ? Icons.check_rounded : Icons.edit_rounded,
+                color: _isEditing ? Colors.green : AppColors.textPrimary,
+              ),
+              onPressed: () {
+                if (_isEditing) {
+                  _saveProfile();
+                }
+                setState(() => _isEditing = !_isEditing);
+              },
             ),
-            onPressed: () {
-              if (_isEditing) {
-                _saveProfile();
-              }
-              setState(() => _isEditing = !_isEditing);
-            },
-          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -136,12 +137,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 32),
 
             // Informações do perfil
-            _buildProfileInfo(),
+            if (_authController.isGuest)
+              _buildGuestInfo()
+            else
+              _buildProfileInfo(),
             const SizedBox(height: 32),
 
             // Preferências
-            _buildPreferences(),
-            const SizedBox(height: 40),
+            if (!_authController.isGuest) ...[
+              _buildPreferences(),
+              const SizedBox(height: 40),
+            ],
 
             // Botão Logout
             _buildLogoutButton(),
@@ -583,17 +589,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Widget _buildGuestInfo() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.surfaceLight),
+      ),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.account_circle_outlined,
+            size: 48,
+            color: AppColors.textMuted,
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Você é um visitante',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Crie uma conta para salvar seu histórico, preferências e acessar em outros dispositivos.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppColors.textSecondary, height: 1.5),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildLogoutButton() {
+    final isGuest = _authController.isGuest;
     return SizedBox(
       width: double.infinity,
       height: 54,
       child: OutlinedButton.icon(
         onPressed: _logout,
-        icon: const Icon(Icons.logout_rounded),
-        label: const Text('Sair da Conta'),
+        icon: Icon(isGuest ? Icons.login_rounded : Icons.logout_rounded),
+        label: Text(isGuest ? 'Fazer Login / Criar Conta' : 'Sair da Conta'),
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.error,
-          side: BorderSide(color: AppColors.error.withOpacity(0.5)),
+          foregroundColor: isGuest ? AppColors.primary : AppColors.error,
+          side: BorderSide(
+            color: isGuest
+                ? AppColors.primary.withOpacity(0.5)
+                : AppColors.error.withOpacity(0.5),
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),

@@ -67,6 +67,10 @@ class LoginScreen extends StatelessWidget {
 
                   // Link para cadastro
                   _buildSignUpLink(),
+                  const SizedBox(height: 16),
+
+                  // Botão Visitante
+                  _buildGuestButton(controller),
                   const SizedBox(height: 32),
                 ],
               ),
@@ -400,6 +404,34 @@ class LoginScreen extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildGuestButton(AuthController controller) {
+    return Center(
+      child: TextButton.icon(
+        onPressed: controller.isLoading.value
+            ? null
+            : () async {
+                final success = await controller.signInAnonymously();
+                if (success) {
+                  Get.offAllNamed('/home');
+                }
+              },
+        icon: const Icon(Icons.person_outline_rounded, size: 20),
+        label: const Text(
+          'Continuar como visitante',
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+        ),
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.textSecondary,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+            side: BorderSide(color: AppColors.textMuted.withOpacity(0.2)),
+          ),
+        ),
+      ),
     );
   }
 }

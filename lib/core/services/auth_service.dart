@@ -15,6 +15,15 @@ class AuthService {
   /// Verifica se o usuário está logado
   bool get isLoggedIn => _auth.currentUser != null;
 
+  /// Login Anônimo
+  Future<UserCredential> signInAnonymously() async {
+    try {
+      return await _auth.signInAnonymously();
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthError(e);
+    }
+  }
+
   /// Login com email e senha
   Future<UserCredential> signInWithEmail({
     required String email,

@@ -59,6 +59,29 @@ class AuthController extends GetxController {
   /// Retorna o email do usuário
   String get userEmail => user.value?.email ?? '';
 
+  /// Retorna se é um usuário visitante
+  bool get isGuest => user.value?.isAnonymous ?? false;
+
+  /// Login Anônimo (Visitante)
+  Future<bool> signInAnonymously() async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = '';
+
+      await _authService.signInAnonymously();
+
+      // Inicializa estrutura básica no Firestore (opcional, mas bom pra evitar erros)
+      await _userService.initializeUser();
+
+      return true;
+    } catch (e) {
+      errorMessage.value = e.toString();
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   /// Toggle visibilidade da senha
   void togglePasswordVisibility() {
     isPasswordVisible.value = !isPasswordVisible.value;
