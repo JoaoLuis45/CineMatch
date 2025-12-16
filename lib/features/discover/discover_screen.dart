@@ -31,13 +31,7 @@ class DiscoverScreen extends StatelessWidget {
         ),
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: RadialGradient(
-            center: Alignment.center,
-            radius: 1.2,
-            colors: [Color(0xFF1A0F0F), AppColors.background],
-          ),
-        ),
+        decoration: const BoxDecoration(color: AppColors.background),
         child: SafeArea(child: Obx(() => _buildContent(context, controller))),
       ),
     );

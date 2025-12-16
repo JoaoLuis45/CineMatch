@@ -67,6 +67,7 @@ dependencies:
   intl: ^0.20.2
   firebase_storage: ^12.4.10
   flutter_dotenv: ^6.0.0
+  google_generative_ai: ^0.4.7
 
   # The following adds the Cupertino Icons font to your application.
 # For information on the generic Dart part of this file, see the

@@ -88,6 +88,7 @@ class MovieService {
   /// Busca um filme aleatório baseado nos filtros
   Future<Movie?> getRandomMovie({
     List<int>? genreIds,
+    List<int>? providerIds,
     double? minRating,
   }) async {
     try {
@@ -102,6 +103,12 @@ class MovieService {
 
       if (genreIds != null && genreIds.isNotEmpty) {
         queryParams['with_genres'] = genreIds.join(',');
+      }
+
+      if (providerIds != null && providerIds.isNotEmpty) {
+        // Usa pipe (|) para OR logic (pelo menos um dos provedores)
+        queryParams['with_watch_providers'] = providerIds.join('|');
+        queryParams['watch_region'] = 'BR';
       }
 
       if (minRating != null && minRating > 0) {

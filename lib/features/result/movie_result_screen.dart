@@ -242,10 +242,12 @@ Encontrado com o CineMatch! 🍿
                   movie: movie,
                   genreNames: _getGenreNames(movie.genreIds),
                   isWatched: _isWatched,
-                  onTryAnother: () async {
-                    await _controller.findRandomMovie();
-                    _checkIfWatched();
-                  },
+                  onTryAnother: _controller.isAiRecommended.value
+                      ? null
+                      : () async {
+                          await _controller.findRandomMovie();
+                          _checkIfWatched();
+                        },
                 ),
 
                 const SizedBox(height: 16),

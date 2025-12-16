@@ -6,6 +6,7 @@ import '../../core/theme/app_theme.dart';
 import '../../shared/widgets/genre_chip.dart';
 import '../discover/discover_screen.dart';
 import '../search/movie_search_screen.dart';
+import '../ai_discovery/ai_discovery_screen.dart';
 
 /// Aba de descoberta de filmes - Redesenhada
 class DiscoverTab extends StatefulWidget {
@@ -20,7 +21,6 @@ class _DiscoverTabState extends State<DiscoverTab> {
   final UserService _userService = UserService();
 
   // Estado local dos filtros
-  final Set<int> _selectedProviders = {};
   List<String> _userFavoriteGenres = [];
   List<int> _userFavoriteGenreIds = [];
   bool _excludeWatched = false;
@@ -105,6 +105,9 @@ class _DiscoverTabState extends State<DiscoverTab> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 8),
+                  const SizedBox(height: 8),
+                  _buildAISection(),
+                  const SizedBox(height: 20),
                   _buildQuickDiscoverySection(),
                   const SizedBox(height: 28),
                   _buildStreamingSection(),
@@ -193,7 +196,10 @@ class _DiscoverTabState extends State<DiscoverTab> {
               const SizedBox(width: 8),
               // Botão de perfil
               GestureDetector(
-                onTap: () => Get.toNamed('/profile'),
+                onTap: () async {
+                  await Get.toNamed('/profile');
+                  _loadUserPreferences();
+                },
                 child: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
@@ -210,6 +216,91 @@ class _DiscoverTabState extends State<DiscoverTab> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildAISection() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF6A11CB).withOpacity(0.2), // Roxo mágico
+            const Color(0xFF2575FC).withOpacity(0.1), // Azul
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFF6A11CB).withOpacity(0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6A11CB).withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.auto_awesome,
+                  color: Color(0xFFB28BF5), // Roxo claro
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Busca Inteligente com IA',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      'Descreva o filme que você quer',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => Get.to(() => const AIDiscoveryScreen()),
+              icon: const Icon(
+                Icons.stars_rounded,
+                size: 20,
+                color: Colors.white,
+              ),
+              label: const Text('Perguntar para a IA'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6A11CB),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 4,
+                shadowColor: const Color(0xFF6A11CB).withOpacity(0.5),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -254,7 +345,7 @@ class _DiscoverTabState extends State<DiscoverTab> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Discovery Automático',
+                      'Descobrir automaticamente',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -263,7 +354,7 @@ class _DiscoverTabState extends State<DiscoverTab> {
                     ),
                     Text(
                       hasPreferences
-                          ? '${_userFavoriteGenres.length} gêneros configurados'
+                          ? 'com base em ${_userFavoriteGenres.length} ${_userFavoriteGenres.length == 1 ? 'gênero preferido' : 'gêneros preferidos'}'
                           : 'Baseado nos seus gêneros preferidos',
                       style: TextStyle(
                         fontSize: 12,
@@ -311,60 +402,60 @@ class _DiscoverTabState extends State<DiscoverTab> {
         spacing: 10,
         runSpacing: 10,
         children: _streamingProviders.map((provider) {
-          final isSelected = _selectedProviders.contains(provider['id']);
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                if (isSelected) {
-                  _selectedProviders.remove(provider['id']);
-                } else {
-                  _selectedProviders.add(provider['id'] as int);
-                }
-              });
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? (provider['color'] as Color).withOpacity(0.2)
-                    : AppColors.surface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
+          return Obx(() {
+            final isSelected = _movieController.isProviderSelected(
+              provider['id'] as int,
+            );
+            return GestureDetector(
+              onTap: () =>
+                  _movieController.toggleProvider(provider['id'] as int),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
                   color: isSelected
-                      ? provider['color'] as Color
-                      : AppColors.surfaceLight,
-                  width: isSelected ? 2 : 1,
+                      ? (provider['color'] as Color).withOpacity(0.2)
+                      : AppColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isSelected
+                        ? provider['color'] as Color
+                        : AppColors.surfaceLight,
+                    width: isSelected ? 2 : 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: provider['color'] as Color,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      provider['name'] as String,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                        color: isSelected
+                            ? provider['color'] as Color
+                            : AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: provider['color'] as Color,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    provider['name'] as String,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: isSelected
-                          ? FontWeight.w600
-                          : FontWeight.normal,
-                      color: isSelected
-                          ? provider['color'] as Color
-                          : AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
+            );
+          });
         }).toList(),
       ),
     );
@@ -583,9 +674,7 @@ class _DiscoverTabState extends State<DiscoverTab> {
 
   Widget _buildDiscoverButton() {
     return Obx(() {
-      final hasSelection =
-          _movieController.selectedGenres.isNotEmpty ||
-          _selectedProviders.isNotEmpty;
+      final hasSelection = _movieController.canSearch;
 
       return SizedBox(
         width: double.infinity,
@@ -627,18 +716,23 @@ class _DiscoverTabState extends State<DiscoverTab> {
     });
   }
 
-  void _handleAutoDiscovery() {
+  void _handleAutoDiscovery() async {
     if (_userFavoriteGenreIds.isEmpty) {
-      Get.toNamed('/profile');
-      Get.snackbar(
-        'Configure seu perfil',
-        'Selecione seus gêneros preferidos para usar o Discovery Automático',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.primary,
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(16),
-        borderRadius: 12,
-      );
+      await Get.toNamed('/profile');
+      _loadUserPreferences();
+
+      // Se ainda estiver vazio após voltar, mostra aviso
+      if (_userFavoriteGenreIds.isEmpty) {
+        Get.snackbar(
+          'Configure seu perfil',
+          'Selecione seus gêneros preferidos para usar o Discovery Automático',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: AppColors.primary,
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 12,
+        );
+      }
     } else {
       _movieController.clearSelection();
 

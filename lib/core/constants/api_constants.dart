@@ -12,6 +12,7 @@ class ApiConstants {
 
   /// API Key - Obtida do arquivo .env
   static String get apiKey => dotenv.env['TMDB_API_KEY'] ?? '';
+  static String get geminiApiKey => dotenv.env['GEMINI_API_KEY'] ?? '';
 
   /// Idioma padrão
   static const String language = 'pt-BR';

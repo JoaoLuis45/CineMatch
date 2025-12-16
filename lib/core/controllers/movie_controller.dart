@@ -4,18 +4,22 @@ import '../models/movie.dart';
 import '../models/watch_provider.dart';
 import '../services/movie_service.dart';
 import '../services/user_service.dart';
+import '../services/ai_service.dart';
 
 /// Controller principal para gerenciamento de filmes
 class MovieController extends GetxController {
   final MovieService _movieService = MovieService();
   final UserService _userService = UserService();
+  final AIService _aiService = AIService();
 
   // Estados observáveis
   final RxList<Genre> genres = <Genre>[].obs;
   final RxList<Genre> selectedGenres = <Genre>[].obs;
   final Rx<Movie?> recommendedMovie = Rx<Movie?>(null);
+  final RxBool isAiRecommended = false.obs;
   final RxBool isLoadingGenres = false.obs;
   final RxBool isSearching = false.obs;
+  final RxBool isAiLoading = false.obs;
   final RxString errorMessage = ''.obs;
   final RxDouble minRating = 6.0.obs;
   final Rx<WatchProviders?> watchProviders = Rx<WatchProviders?>(null);
@@ -23,6 +27,8 @@ class MovieController extends GetxController {
   final RxList<Movie> movieHistory = <Movie>[].obs;
   // Resultados da busca
   final RxList<Movie> searchResults = <Movie>[].obs;
+  // Filtros de provedores
+  final RxList<int> selectedProviders = <int>[].obs;
 
   @override
   void onInit() {
@@ -47,6 +53,7 @@ class MovieController extends GetxController {
     watchProviders.value = null;
     recommendedMovie.value = null;
     selectedGenres.clear();
+    selectedProviders.clear();
   }
 
   /// Busca lista de gêneros
@@ -77,9 +84,29 @@ class MovieController extends GetxController {
     return selectedGenres.contains(genre);
   }
 
+  /// Alterna seleção de um provedor
+  void toggleProvider(int providerId) {
+    if (selectedProviders.contains(providerId)) {
+      selectedProviders.remove(providerId);
+    } else {
+      selectedProviders.add(providerId);
+    }
+  }
+
+  /// Verifica se um provedor está selecionado
+  bool isProviderSelected(int providerId) {
+    return selectedProviders.contains(providerId);
+  }
+
+  /// Limpa todos os provedores selecionados
+  void clearProviders() {
+    selectedProviders.clear();
+  }
+
   /// Limpa todos os gêneros selecionados
   void clearSelection() {
     selectedGenres.clear();
+    selectedProviders.clear();
   }
 
   /// Define a nota mínima
@@ -96,6 +123,7 @@ class MovieController extends GetxController {
 
     try {
       isSearching.value = true;
+      isAiRecommended.value = false;
       errorMessage.value = '';
       watchProviders.value = null;
 
@@ -103,6 +131,9 @@ class MovieController extends GetxController {
 
       final movie = await _movieService.getRandomMovie(
         genreIds: genreIds,
+        providerIds: selectedProviders.isNotEmpty
+            ? selectedProviders.toList()
+            : null,
         minRating: minRating.value,
       );
 
@@ -141,6 +172,64 @@ class MovieController extends GetxController {
       errorMessage.value = e.toString();
     } finally {
       isSearching.value = false;
+    }
+  }
+
+  /// Busca filme utilizando IA (Gemini)
+  Future<void> searchMovieByPrompt(String prompt) async {
+    try {
+      isAiLoading.value = true;
+      isAiRecommended.value = true;
+      errorMessage.value = '';
+      watchProviders.value = null;
+      recommendedMovie.value = null;
+
+      // 1. Pede recomendação para a IA
+      final aiResult = await _aiService.recommendMovie(prompt);
+
+      if (aiResult.containsKey('error')) {
+        throw aiResult['error'];
+      }
+
+      final String title = aiResult['title'];
+      final int? year = aiResult['year'];
+      // Opcional: usar o 'reason' para mostrar pro usuário depois
+
+      // 2. Busca o filme real na API do TMDB
+      final movies = await _movieService.searchMovies(title);
+
+      if (movies.isEmpty) {
+        throw 'A IA sugeriu "$title", mas não encontrei no banco de dados.';
+      }
+
+      // 3. Tenta encontrar o match perfeito (título e ano)
+      Movie? bestMatch;
+
+      if (year != null) {
+        // Tenta achar com o mesmo ano (margem de 1 ano erro)
+        bestMatch = movies.firstWhereOrNull((m) {
+          if (m.releaseDate.isEmpty) return false;
+          try {
+            final movieYear = int.parse(m.releaseDate.split('-')[0]);
+            return (movieYear - year).abs() <= 1;
+          } catch (_) {
+            return false;
+          }
+        });
+      }
+
+      // Se não achou por ano ou não tinha ano, pega o primeiro (mais relevante na busca)
+      bestMatch ??= movies.first;
+
+      // 4. Define como filme recomendado e busca provedores
+      recommendedMovie.value = bestMatch;
+      _addToHistory(bestMatch);
+      await fetchWatchProviders(bestMatch.id);
+    } catch (e) {
+      errorMessage.value = e.toString();
+      isAiRecommended.value = false; // Reset on error
+    } finally {
+      isAiLoading.value = false;
     }
   }
 
@@ -186,7 +275,9 @@ class MovieController extends GetxController {
   /// Reseta todos os filtros
   void resetAll() {
     selectedGenres.clear();
+    selectedProviders.clear();
     recommendedMovie.value = null;
+    isAiRecommended.value = false;
     minRating.value = 6.0;
     errorMessage.value = '';
   }
@@ -198,5 +289,6 @@ class MovieController extends GetxController {
   }
 
   /// Verifica se pode buscar
-  bool get canSearch => selectedGenres.isNotEmpty;
+  bool get canSearch =>
+      selectedGenres.isNotEmpty || selectedProviders.isNotEmpty;
 }
