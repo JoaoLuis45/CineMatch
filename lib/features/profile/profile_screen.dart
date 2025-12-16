@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../../core/controllers/auth_controller.dart';
 import '../../core/controllers/movie_controller.dart';
 import '../../core/services/user_service.dart';
@@ -28,12 +29,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
   File? _imageFile;
   bool _isEditing = false;
   bool _isLoading = true;
+  String _appVersion = '';
 
   @override
   void initState() {
     super.initState();
     _nameController.text = _authController.userName;
     _loadUserProfile();
+    _loadAppVersion();
+  }
+
+  Future<void> _loadAppVersion() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (mounted) {
+        setState(() {
+          _appVersion = 'Versão ${info.version}';
+        });
+      }
+    } catch (e) {
+      // Ignora erro (comum em hot-reload ao adicionar plugins nativos)
+      debugPrint('Erro ao carregar versão: $e');
+    }
   }
 
   Future<void> _loadUserProfile() async {
@@ -128,6 +145,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             // Botão Logout
             _buildLogoutButton(),
+            const SizedBox(height: 32),
+
+            // Versão
+            Text(
+              _appVersion,
+              style: TextStyle(
+                color: AppColors.textMuted.withOpacity(0.5),
+                fontSize: 12,
+              ),
+            ),
             const SizedBox(height: 24),
           ],
         ),
