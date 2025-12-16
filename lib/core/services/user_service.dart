@@ -260,4 +260,38 @@ class UserService {
       throw 'Falha ao fazer upload da imagem: $e';
     }
   }
+
+  /// Exclui todos os dados do usuário (Firestore e Storage)
+  Future<void> deleteUserData() async {
+    final user = _auth.currentUser;
+    final doc = _userDoc;
+    if (user == null || doc == null) return;
+
+    // 1. Excluir subcoleções (Firestore não deleta recursivamente)
+    await clearHistory();
+
+    // Excluir watched
+    final watchedSnapshot = await doc.collection('watched').get();
+    final batch = _firestore.batch();
+    for (final doc in watchedSnapshot.docs) {
+      batch.delete(doc.reference);
+    }
+    await batch.commit();
+
+    // 2. Excluir foto de perfil no Storage
+    try {
+      if (user.photoURL != null && user.photoURL!.contains('profile_photos')) {
+        final ref = FirebaseStorage.instance
+            .ref()
+            .child('profile_photos')
+            .child('${user.uid}.jpg');
+        await ref.delete();
+      }
+    } catch (e) {
+      // Ignora erro se imagem não existir
+    }
+
+    // 3. Excluir documento do usuário
+    await doc.delete();
+  }
 }

@@ -151,6 +151,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             // Botão Logout
             _buildLogoutButton(),
+
+            // Botão Excluir Conta (Apenas para logados)
+            if (!_authController.isGuest) ...[
+              const SizedBox(height: 24),
+              _buildDeleteAccountButton(),
+            ],
+
             const SizedBox(height: 32),
 
             // Versão
@@ -634,16 +641,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
         icon: Icon(isGuest ? Icons.login_rounded : Icons.logout_rounded),
         label: Text(isGuest ? 'Fazer Login / Criar Conta' : 'Sair da Conta'),
         style: OutlinedButton.styleFrom(
-          foregroundColor: isGuest ? AppColors.primary : AppColors.error,
+          foregroundColor: isGuest ? AppColors.primary : AppColors.textPrimary,
           side: BorderSide(
-            color: isGuest
-                ? AppColors.primary.withOpacity(0.5)
-                : AppColors.error.withOpacity(0.5),
+            color: isGuest ? AppColors.primary : AppColors.surfaceLight,
           ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildDeleteAccountButton() {
+    return Center(
+      child: TextButton(
+        onPressed: _confirmDeleteAccount,
+        style: TextButton.styleFrom(foregroundColor: AppColors.error),
+        child: const Text('Excluir minha conta'),
       ),
     );
   }
@@ -788,6 +803,54 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (confirm == true) {
       await _authController.signOut();
       Get.offAllNamed('/login');
+    }
+  }
+
+  Future<void> _confirmDeleteAccount() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: const Text(
+          'Excluir Conta?',
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
+        content: const Text(
+          'Tem certeza que deseja excluir sua conta? Esta ação é irreversível e todos os seus dados (histórico, preferências) serão perdidos.',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('Excluir Definitivamente'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      final success = await _authController.deleteAccount();
+      if (success) {
+        Get.offAllNamed('/login');
+        Get.snackbar(
+          'Conta Excluída',
+          'Sua conta e dados foram removidos com sucesso.',
+          backgroundColor: AppColors.surface,
+          colorText: AppColors.textPrimary,
+        );
+      } else {
+        Get.snackbar(
+          'Erro',
+          _authController.errorMessage.value,
+          backgroundColor: AppColors.error,
+          colorText: Colors.white,
+        );
+      }
     }
   }
 }

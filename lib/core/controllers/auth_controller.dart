@@ -279,4 +279,25 @@ class AuthController extends GetxController {
     // Força atualização do estado do usuário
     user.value = _authService.currentUser;
   }
+
+  /// Exclui a conta e dados do usuário
+  Future<bool> deleteAccount() async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = '';
+
+      // 1. Excluir dados do Firestore/Storage
+      await _userService.deleteUserData();
+
+      // 2. Excluir usuário do Auth
+      await _authService.deleteAccount();
+
+      return true;
+    } catch (e) {
+      errorMessage.value = e.toString();
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
 }

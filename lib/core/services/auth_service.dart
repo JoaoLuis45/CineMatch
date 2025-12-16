@@ -159,4 +159,16 @@ class AuthService {
         return 'Erro de autenticação: ${e.message}';
     }
   }
+
+  /// Exclui a conta do usuário
+  Future<void> deleteAccount() async {
+    try {
+      await _auth.currentUser?.delete();
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login') {
+        throw 'Para sua segurança, faça login novamente antes de excluir a conta.';
+      }
+      throw _handleAuthError(e);
+    }
+  }
 }

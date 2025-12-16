@@ -200,51 +200,116 @@ class StreamingProvidersWidget extends StatelessWidget {
     );
   }
 
+  Future<void> _launchProvider(WatchProvider provider) async {
+    final providerName = provider.providerName.toLowerCase();
+    final encodedTitle = Uri.encodeComponent(movieTitle);
+
+    // Mapa de schemes para busca (Search Intent)
+    String? appUrl;
+
+    if (providerName.contains('netflix')) {
+      appUrl = 'nflx://www.netflix.com/Search?q=$encodedTitle';
+    } else if (providerName.contains('prime video') ||
+        providerName.contains('amazon prime')) {
+      // Prime Video URI scheme para buscar (tentativa, pode variar por região/versão)
+      // Fallback seguro: abrir app
+      appUrl = 'primevideo://';
+    } else if (providerName.contains('disney')) {
+      appUrl = 'disneyplus://'; // Abrir app
+    } else if (providerName.contains('max') || providerName.contains('hbo')) {
+      appUrl =
+          'max://'; // Abrir app (Max mudou para max:// recentemente nos EUA, pode ser hbomax:// no BR antigo)
+    } else if (providerName.contains('globoplay')) {
+      // Globoplay não tem scheme público documentado fácil, mas tentaremos
+    }
+
+    // 1. Tentar abrir o App específico
+    if (appUrl != null) {
+      final uri = Uri.parse(appUrl);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+        return;
+      }
+    }
+
+    // 2. Se falhar ou não tiver app mapeado, tentar link do TMDb (JustWatch)
+    if (providers?.link != null && providers!.link!.isNotEmpty) {
+      final webUri = Uri.parse(providers!.link!);
+      if (await canLaunchUrl(webUri)) {
+        await launchUrl(webUri, mode: LaunchMode.externalApplication);
+        return;
+      }
+    }
+
+    // 3. Último caso: Google Search no navegador
+    await _launchGoogleSearch();
+  }
+
   Widget _buildProviderChip(WatchProvider provider) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundLight,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.surfaceLight),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Logo do provedor
-          if (provider.logoUrl.isNotEmpty)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: CachedNetworkImage(
-                imageUrl: provider.logoUrl,
-                width: 24,
-                height: 24,
-                fit: BoxFit.cover,
-                placeholder: (context, url) =>
-                    Container(width: 24, height: 24, color: AppColors.surface),
-                errorWidget: (context, url, error) => Icon(
-                  Icons.play_arrow_rounded,
-                  size: 24,
-                  color: AppColors.textMuted,
+    return GestureDetector(
+      onTap: () => _launchProvider(provider),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: AppColors.backgroundLight,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.surfaceLight),
+          // Feedback visual de clique (sutil)
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Logo do provedor
+            if (provider.logoUrl.isNotEmpty)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: CachedNetworkImage(
+                  imageUrl: provider.logoUrl,
+                  width: 24,
+                  height: 24,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    width: 24,
+                    height: 24,
+                    color: AppColors.surface,
+                  ),
+                  errorWidget: (context, url, error) => Icon(
+                    Icons.play_arrow_rounded,
+                    size: 24,
+                    color: AppColors.textMuted,
+                  ),
                 ),
+              )
+            else
+              Icon(
+                Icons.play_arrow_rounded,
+                size: 24,
+                color: AppColors.textMuted,
               ),
-            )
-          else
+            const SizedBox(width: 6),
+            Text(
+              provider.providerName,
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(width: 4),
             Icon(
-              Icons.play_arrow_rounded,
-              size: 24,
-              color: AppColors.textMuted,
+              Icons.open_in_new_rounded,
+              size: 10,
+              color: AppColors.textMuted.withOpacity(0.7),
             ),
-          const SizedBox(width: 6),
-          Text(
-            provider.providerName,
-            style: TextStyle(
-              fontSize: 12,
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
